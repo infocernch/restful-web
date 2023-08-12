@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class RestfulWebServiceApplication {
-//s
+
     public static void main(String[] args) {
         SpringApplication.run(RestfulWebServiceApplication.class, args);
     }
