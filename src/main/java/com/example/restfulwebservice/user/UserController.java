@@ -1,10 +1,13 @@
 package com.example.restfulwebservice.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.lang.model.SourceVersion;
+import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -24,6 +27,51 @@ public class UserController {
     //선언할때 int라고 선언하면 자동으로 int로 매핑시켜줌
     @GetMapping("/users/{id}")
     public User retrieveUser(@PathVariable int id) {
-        return service.findOne(id);
+        User user = service.findOne(id);
+
+        if (user == null) {
+            throw new UserNotFoundException(String.format("ID[%s] not found", id));
+        }
+
+        return user;
+    }
+
+    //데이터를 form데이터가 아닌 xml이나 json형태의 데이터를
+    // 받기 위해서는 @RequestBody를 사용
+    @PostMapping("/users")
+    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+        User savedUser = service.save(user);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedUser.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).build();
+    }
+
+    @DeleteMapping("/users/{id}")
+    public void deleteUser(@PathVariable int id) {
+        User user = service.deleteById(id);
+        if (user == null) {
+            throw new UserNotFoundException(String.format("ID[$s] not found", id));
+        }
+    }
+
+    @PutMapping("/users/{id}")
+    public ResponseEntity<User> updateUser(@RequestBody User user,@PathVariable int id) {
+
+        User updateUser = service.updateUser(user,id);
+        if (user.getId() != id) {
+            throw new UserNotFoundException(String.format("ID[%s] not found", id));
+        }
+
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+//                        .path("/{id}")
+                        .buildAndExpand(updateUser.getId())
+                        .toUri();
+        System.out.println(location);
+        return ResponseEntity.created(location).build();
     }
 }
