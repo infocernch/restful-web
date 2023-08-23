@@ -1,6 +1,8 @@
 package com.example.restfulwebservice.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -9,6 +11,9 @@ import javax.lang.model.SourceVersion;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 public class UserController {
@@ -26,14 +31,19 @@ public class UserController {
     //GET /users/1 or /users/10 -> String
     //선언할때 int라고 선언하면 자동으로 int로 매핑시켜줌
     @GetMapping("/users/{id}")
-    public User retrieveUser(@PathVariable int id) {
+    public EntityModel<User> retrieveUser(@PathVariable int id)  {
         User user = service.findOne(id);
 
         if (user == null) {
             throw new UserNotFoundException(String.format("ID[%s] not found", id));
         }
 
-        return user;
+        //HATEOAS
+        EntityModel<User> model = EntityModel.of(user);
+        WebMvcLinkBuilder linkTo = linkTo(methodOn(this.getClass()).retrieveAllUsers());
+        model.add(linkTo.withRel("all-users"));
+
+        return model;
     }
 
     //데이터를 form데이터가 아닌 xml이나 json형태의 데이터를
